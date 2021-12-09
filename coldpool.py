@@ -135,7 +135,7 @@ def movie(rundir, outdir, run=''):
 
     def make_frame(t):
         nonlocal fps, thl, qr, time, fig, imthl, imqr, timetext
-        ti = int(t*fps)
+        ti = int(t*fps+.5)
         select_time(thl, qr, time, fig, imthl, imqr, timetext, ti)
         return mplfig_to_npimage(fig)
 

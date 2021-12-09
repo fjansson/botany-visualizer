@@ -3,17 +3,24 @@
 import thumbnail
 import coldpool
 import albedo
+import twp
 import glob
 import os
+import sys
 
+if len(sys.argv) > 1:
+    experiment_dir = sys.argv[1]
+else:
+    print('usage example: run_visualizations.py /home/hp200321/data/botany-6-768/')
+    sys.exit(1)
+    
+run_dir = os.path.join(experiment_dir, 'runs')
+thumbnail_dir = os.path.join(experiment_dir, 'thumbnails')
 
-thumbnail_dir = '/home/hp200321/data/botany-6-768/thumbnails'
 if not os.path.isdir(thumbnail_dir):
     os.makedirs(thumbnail_dir)
 
-rundir = '/home/hp200321/data/botany-6-768/runs'
-
-Runs = glob.glob(os.path.join(rundir, 'Run_*'))
+Runs = glob.glob(os.path.join(run_dir, 'Run_*'))
 
 for r in Runs:
     try:
@@ -37,9 +44,16 @@ for r in Runs:
         coldpool.movie(rundir=r, outdir=outdir)
         albedo.plot_albedo(rundir=r, outdir=outdir, times=[24,48,72])
         albedo.movie(rundir=r, outdir=outdir)
+
+        twp_viz = twp.TWP(rundir=r, outdir=outdir)
+        twp_viz.plot(times=[24,48,72])
+        twp_viz.movie()
     except:
         pass
         # to handle broken runs / missing input files
         # also catches control-C - annoying
+
+
+        
 
     
