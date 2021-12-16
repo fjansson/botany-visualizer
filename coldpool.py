@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import matplotlib
 matplotlib.use('Agg') # to work without X
 
@@ -30,116 +29,129 @@ params = {
 
 plt.rcParams.update(params)
 
-
-ti = 0
-
 qrmin = 0    * 1000
-qrmax = 0.01 * 1000 # *1000 for scaling to g/kg
-thlmin = 293.0
-thlmax = 298.0
-#qrmax = qr.max()                       # qr -2.3676447e-22 0.008596641
-#thlmin,thlmax = thl.min(), thl.max()   # thl 293.08685 297.84753
-
-print ('thl', thlmin, thlmax)
-print ('qr', qrmin, qrmax)
-
-color1 ='#ff000000' # transparent red
-color2 ='#ff0000ff' # solid red
-color1b='#ffffff' # solid white 
-
-cmap_rain = mpl.colors.LinearSegmentedColormap.from_list('my_cmap2',[color1,color2],256)
-
-def setup(rundir):
-    crossxy_file=os.path.join(rundir, 'crossxy.0001.nc')
-    data = Dataset(crossxy_file, "r")
-
-    #thl = data['/thlxy'][:,:,:] # seems to load all data now
-    #qr  = data['/qrxy'][:,:,:]
-    time = data['/time']
-    thl = data['/thlxy']         # doesn't load everything
-    qr  = data['/qrxy']
-
-    #fig = plt.figure(figsize=(18, 13.5), dpi=80) # 1440 x 1080
-    fig = plt.figure(figsize=(13.5, 13.5), dpi=80) # 1080 x 1080
-
-    imthl = plt.imshow(thl[ti,:,:], vmin=thlmin, vmax=thlmax)
-    imqr = plt.imshow(1000*qr[ti,:,:], cmap=cmap_rain, vmin=qrmin, vmax=qrmax)
-
-    plt.axis('off')
-    plt.gca().set_position([0, 0, 1, 1])
-
-    # plt.gca().set_position([0, 0, .75, 1])
-    # # colorbar for thl
-    # cax = fig.add_axes([.8, 0.55, 0.03, .4])
-    # cb = fig.colorbar(imthl, cax=cax)
-    # cb.set_label(r'$\theta_l$ (K)')
-    # # colorbar for qr
-    # cax = fig.add_axes([.8, 0.05, 0.03, .4])
-    # #cb = fig.colorbar(imqr, cax=cax)
-    # #transparent colors in colormap gives stripes in the colorbar due to overlap.
-    # cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap2b',[color1b,color2],256)
-    # norm = mpl.colors.Normalize(vmin=qrmin, vmax=qrmax)
-    # cb   = mpl.colorbar.ColorbarBase(cax, cmap=cmap, norm=norm)
-    # cb.set_label(r'$q_r$ (g/kg)')
-    # cb.locator = ticker.LinearLocator(6)
-    # cb.update_ticks()
+qrmax = 0.005 * 1000 # *1000 for scaling to g/kg
+thlmin = 290.0
+thlmax = 300.0
 
 
-    timetext= plt.text(.98, .05, "",
-                       horizontalalignment='right',
-                       #verticalalignment='center',
-                       #transform=fig.gca().transAxes,
-                       transform=plt.gcf().transFigure,
-                       size=20)
-    return thl, qr, time, fig, imthl, imqr, timetext
-
-def select_time(thl, qr, time, fig, imthl, imqr, timetext, ti):
-    imthl.set_data(thl[ti,:,:])
-    imqr.set_data(1000*qr[ti,:,:])
-
-    hours=time[ti]/3600
-    # t = "%2d days, %2.0f h"%(int(hours/24), int(hours%24))
-    t = "%3.0f h"%(hours)
-    timetext.set_text(t)
 
 
-    
-#for ti in range(100,103):
-#    print(ti)
-#    select_time(ti)
-#    plt.savefig('frames/thl%04d.png'%ti)
 
 # find time index of the time closest to t
 def find_time_index(times, t):
     ti = np.abs((times[:]-t)).argmin()
     return ti
 
-# times is a list of time points to plot, in hours
-def plot_coldpool(rundir, outdir, run='', times=[24]):
-    thl, qr, time, fig, imthl, imqr, timetext = setup(rundir)
-    for t in times:
-        t_sec = t*3600
-        ti = find_time_index(time, t_sec)
-        if np.abs(time[ti]-t_sec) < 600:
-            select_time(thl, qr, time, fig, imthl, imqr, timetext, ti)
-            outfile=os.path.join(outdir, 'coldpool%02d.png'%t)
-            plt.savefig(outfile)
+class Coldpool:
+    def __init__(self, rundir, outdir=None, size=1080, colorbar=False, time_fmt=None):
+        color1 ='#ff000000' # transparent cyan
+        color2 ='#ff0000ff' # solid cyan
+        #color1b='#ffffff' # solid white
+        
+
+        self.cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap2',[color1,color2],256)
+
+        self.outdir = outdir
+        self.colorbar = colorbar
+        self.time_fmt = time_fmt
+        cross_file = os.path.join(rundir, 'crossxy.0001.nc')
+        self.cross = Dataset(cross_file, "r")
+        self.time = self.cross['/time']
+        self.thl = self.cross['/thlxy']         # doesn't load everything
+        self.qr  = self.cross['/qrxy']
+        
+        print('THL range:', self.thl[:,:,:].min(), self.thl[:,:,:].max())
+        
+        dpi = 80
+        sizex = size
+        if colorbar:
+            sizex *= 4/3
+        self.fig = plt.figure(figsize=(sizex/dpi, size/dpi), dpi=dpi)
+
+        ti = 0
+        self.imthl = plt.imshow(self.thl[ti,:,:], vmin=thlmin, vmax=thlmax)
+        self.imqr = plt.imshow(1000*self.qr[ti,:,:], cmap=self.cmap, vmin=qrmin, vmax=qrmax)
+        
+        plt.axis('off')
+        
+
+        self.timetext = plt.text(.98, .05, "",
+                                 horizontalalignment='right',
+                                 #verticalalignment='center',
+                                 #transform=fig.gca().transAxes,
+                                 transform=plt.gcf().transFigure,
+                                 color='Black',
+                                 size=20)
+        if not self.colorbar:
+            plt.gca().set_position([0, 0, 1, 1])
+        else:
+            plt.gca().set_position([0, 0, .75, 1])
+            cax = self.fig.add_axes([.8, 0.55, 0.03, .4])
+            cb = self.fig.colorbar(self.imqr, cax=cax)
+            cb.set_label(r'q$_r$ (g/kg)')
+            cax = self.fig.add_axes([.8, 0.05, 0.03, .4])
+            cb2 = self.fig.colorbar(self.imthl, cax=cax)
+            cb2.set_label(r'$\theta_l$ (K)')
+            
+        # # colorbar for qr
+        # cax = fig.add_axes([.8, 0.05, 0.03, .4])
+        # #cb = fig.colorbar(imqr, cax=cax)
+        # #transparent colors in colormap gives stripes in the colorbar due to overlap.
+        # cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap2b',[color1b,color2],256)
+        # norm = mpl.colors.Normalize(vmin=qrmin, vmax=qrmax)
+        # cb   = mpl.colorbar.ColorbarBase(cax, cmap=cmap, norm=norm)
+        # cb.set_label(r'$q_r$ (g/kg)')
+        # cb.locator = ticker.LinearLocator(6)
+        # cb.update_ticks()
+
+
+    def format_time(self, t):
+        hours = int(t/3600)
+        minutes = int(t/60)%60
+        seconds = int(t)%60
+        if self.time_fmt == 'hms':
+            return "%3.0f:%02d:%02d"%(hours,minutes,seconds)
+        return "%3.0f h"%(hours) 
+
+    def select_time(self, ti, run=''):
+        self.imthl.set_data(self.thl[ti,:,:])
+        self.imqr.set_data(1000*self.qr[ti,:,:])
+        
+        txt = self.format_time(self.time[ti])
+        if run:  #if run given, print just the run in the image
+            txt = run 
+        self.timetext.set_text(txt)
+
+    # times is a list of time points to plot, in hours    
+    def plot(self, times=[24], run=None, filename=None):
+        for t in times:
+            t_sec = t*3600
+            ti = find_time_index(self.time, t_sec)
+            if np.abs(self.time[ti]-t_sec) < 600:
+                self.select_time(ti, run)
+                if not filename:
+                    f='coldpool%02d.png'%t
+                else:
+                    f=filename
+                if run:
+                    f = run + '_' + f
+                outfile=os.path.join(self.outdir, f)
+                self.fig.savefig(outfile)
 
     
-def movie(rundir, outdir, run=''):
-    thl, qr, time, fig, imthl, imqr, timetext = setup(rundir)
+    def movie(self, fps=24, run=''):    
+        nframes = self.time.shape[0]
+        duration= nframes/fps
 
-    nframes = time.shape[0]
-    fps = 24
-    duration= nframes/fps
+        def make_frame(t):
+            nonlocal self, fps, run
+            ti = int(t*fps+.5)
+            self.select_time(ti, run)
+            return mplfig_to_npimage(self.fig)
 
-    def make_frame(t):
-        nonlocal fps, thl, qr, time, fig, imthl, imqr, timetext
-        ti = int(t*fps+.5)
-        select_time(thl, qr, time, fig, imthl, imqr, timetext, ti)
-        return mplfig_to_npimage(fig)
+        animation = VideoClip(make_frame, duration=duration)
+        outfile=os.path.join(self.outdir, 'coldpool.mp4')
+        animation.write_videofile(outfile, fps=fps)
 
-    animation = VideoClip(make_frame, duration=duration)
-    outfile=os.path.join(outdir, 'coldpool.mp4')
-    animation.write_videofile(outfile, fps=fps)
  

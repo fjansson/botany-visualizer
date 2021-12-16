@@ -32,24 +32,41 @@ for r in Runs:
     #Thumbnail
     #thumbnail.make_thumbnail(rundir=r, outdir=thumbnail_dir, run=run_name)
     # placeholder thumbnail: albedo
-    try:
-        albedo.plot_albedo(rundir=r, outdir=thumbnail_dir, run=run_name, times=[48], size=160, filename='thumbnail.png')
 
-        # create visualizations directory in run dir
-        outdir = os.path.join(r, 'visualizations')
-        if not os.path.isdir(outdir):
-            os.makedirs(outdir)
 
-        coldpool.plot_coldpool(rundir=r, outdir=outdir, times=[24,48,72])
-        coldpool.movie(rundir=r, outdir=outdir)
-        albedo.plot_albedo(rundir=r, outdir=outdir, times=[24,48,72])
-        albedo.movie(rundir=r, outdir=outdir)
+    # create visualizations directory in run dir
+    outdir = os.path.join(r, 'visualizations')
+    if not os.path.isdir(outdir):
+        os.makedirs(outdir)
 
-        twp_viz = twp.TWP(rundir=r, outdir=outdir)
-        twp_viz.plot(times=[24,48,72])
-        twp_viz.movie()
-    except:
-        pass
+    #HEEPS plot settings:
+    #colorbar = True
+    #time_fmt = 'hms'
+    #plot_times = [36]
+
+    #Botany overview settings
+    colorbar = False
+    time_fmt = 'h'
+    plot_times = [24 48 72 96]
+
+    
+    coldpool_viz = coldpool.Coldpool(rundir=r, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
+    coldpool_viz.plot(times=plot_times)
+    coldpool_viz.movie()
+
+    albedo_viz = albedo.Albedo(rundir=r, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
+    albedo_viz.plot(times=plot_times)
+    albedo_viz.movie()
+
+    thumbnail_viz = albedo.Albedo(rundir=r, outdir=thumbnail_dir, colorbar=False, time_fmt=None, size=160)
+    thumbnail_viz.plot(times=[48], filename='thumbnail.png')
+
+
+    twp_viz = twp.TWP(rundir=r, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
+    twp_viz.plot(times=plot_times)
+    twp_viz.movie()
+    #except:
+    # pass
         # to handle broken runs / missing input files
         # also catches control-C - annoying
 

@@ -35,7 +35,7 @@ def find_time_index(times, t):
     return ti
 
 class TWP:
-    def __init__(self, rundir, outdir=None, size=1080):
+    def __init__(self, rundir, outdir=None, size=1080, colorbar=False, time_fmt=None):
         #color1 ='#0080ff00' # transparent cyan
         #color2 ='#0080ffff' # solid cyan
         #color1b='#ffffff' # solid white
@@ -46,21 +46,27 @@ class TWP:
         #self.cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap2',[color1,color2],256)
 
         self.outdir = outdir
-        
+        self.colorbar = colorbar
+        self.time_fmt = time_fmt
         cape_file = os.path.join(rundir, 'cape.nc')
         self.cape = Dataset(cape_file, "r")
         self.time = self.cape['/time']
         self.twp  = self.cape['/twp']
+
+        print('TWP range:', self.twp[:,:,:].min(), self.twp[:,:,:].max())
         
         dpi = 80
-        self.fig = plt.figure(figsize=(size/dpi, size/dpi), dpi=dpi)
+        sizex = size
+        if colorbar:
+            sizex *= 4/3
+        self.fig = plt.figure(figsize=(sizex/dpi, size/dpi), dpi=dpi)
 
         ti = 0
         self.im = plt.imshow(self.twp[ti,:,:], vmin=self.twpmin, vmax=self.twpmax)
         # cmap='Greys_r'
         
         plt.axis('off')
-        plt.gca().set_position([0, 0, 1, 1])
+        
 
         self.timetext = plt.text(.98, .05, "",
                                  horizontalalignment='right',
@@ -69,12 +75,13 @@ class TWP:
                                  transform=plt.gcf().transFigure,
                                  color='Blue',
                                  size=20)
-    
-        # plt.gca().set_position([0, 0, .75, 1])
-        # # colorbar for thl
-        # cax = fig.add_axes([.8, 0.55, 0.03, .4])
-        # cb = fig.colorbar(imthl, cax=cax)
-        # cb.set_label(r'$\theta_l$ (K)')
+        if not self.colorbar:
+            plt.gca().set_position([0, 0, 1, 1])
+        else:
+            plt.gca().set_position([0, 0, .75, 1])
+            cax = self.fig.add_axes([.8, 0.55, 0.03, .4])
+            cb = self.fig.colorbar(self.im, cax=cax)
+            cb.set_label(r'TWP kg/m$^2$')
         # # colorbar for qr
         # cax = fig.add_axes([.8, 0.05, 0.03, .4])
         # #cb = fig.colorbar(imqr, cax=cax)
@@ -87,15 +94,22 @@ class TWP:
         # cb.update_ticks()
 
 
+    def format_time(self, t):
+        hours = int(t/3600)
+        minutes = int(t/60)%60
+        seconds = int(t)%60
+        if self.time_fmt == 'hms':
+            return "%3.0f:%02d:%02d"%(hours,minutes,seconds)
+        return "%3.0f h"%(hours) 
+
     def select_time(self, ti, run=''):
         #imlwp.set_data(lwp[ti,:,:])
         self.im.set_data(self.twp[ti,:,:])
         
-        hours = self.time[ti]/3600
-        t = "%3.0f h"%(hours)
+        txt = self.format_time(self.time[ti])
         if run:  #if run given, print just the run in the image
-            t = run 
-        self.timetext.set_text(t)
+            txt = run 
+        self.timetext.set_text(txt)
 
     # times is a list of time points to plot, in hours    
     def plot(self, times=[24], run=None, filename=None):
