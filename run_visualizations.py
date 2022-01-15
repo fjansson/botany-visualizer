@@ -47,7 +47,7 @@ for r in Runs:
     #Botany overview settings
     colorbar = False
     time_fmt = 'h'
-    plot_times = [24 48 72 96]
+    plot_times = [24, 48, 72, 96]
 
     
     coldpool_viz = coldpool.Coldpool(rundir=r, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
