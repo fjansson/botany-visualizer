@@ -44,25 +44,21 @@ def find_time_index(times, t):
     return ti
 
 class Coldpool:
-    def __init__(self, rundir, outdir=None, size=1080, colorbar=False, time_fmt=None):
+    def __init__(self, data, outdir=None, size=1080, colorbar=False, time_fmt=None):
         color1 ='#ff000000' # transparent cyan
         color2 ='#ff0000ff' # solid cyan
         #color1b='#ffffff' # solid white
-        
+
+        self.data = data
 
         self.cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap2',[color1,color2],256)
 
         self.outdir = outdir
         self.colorbar = colorbar
         self.time_fmt = time_fmt
-        cross_file = os.path.join(rundir, 'crossxy.0001.nc')
-        self.cross = Dataset(cross_file, "r")
-        self.time = self.cross['/time']
-        self.thl = self.cross['/thlxy']         # doesn't load everything
-        self.qr  = self.cross['/qrxy']
-        
-        print('THL range:', self.thl[:,:,:].min(), self.thl[:,:,:].max())
-        
+
+        print('THL range:', self.data.thl[:,:,:].min(), self.data.thl[:,:,:].max())
+
         dpi = 80
         sizex = size
         if colorbar:
@@ -70,11 +66,11 @@ class Coldpool:
         self.fig = plt.figure(figsize=(sizex/dpi, size/dpi), dpi=dpi)
 
         ti = 0
-        self.imthl = plt.imshow(self.thl[ti,:,:], vmin=thlmin, vmax=thlmax)
-        self.imqr = plt.imshow(1000*self.qr[ti,:,:], cmap=self.cmap, vmin=qrmin, vmax=qrmax)
-        
+        self.imthl = plt.imshow(self.data.thl[ti,:,:], vmin=thlmin, vmax=thlmax)
+        self.imqr = plt.imshow(1000*self.data.qr[ti,:,:], cmap=self.cmap, vmin=qrmin, vmax=qrmax)
+
         plt.axis('off')
-        
+
 
         self.timetext = plt.text(.98, .05, "",
                                  horizontalalignment='right',
@@ -93,7 +89,7 @@ class Coldpool:
             cax = self.fig.add_axes([.8, 0.05, 0.03, .4])
             cb2 = self.fig.colorbar(self.imthl, cax=cax)
             cb2.set_label(r'$\theta_l$ (K)')
-            
+
         # # colorbar for qr
         # cax = fig.add_axes([.8, 0.05, 0.03, .4])
         # #cb = fig.colorbar(imqr, cax=cax)
@@ -112,23 +108,23 @@ class Coldpool:
         seconds = int(t)%60
         if self.time_fmt == 'hms':
             return "%3.0f:%02d:%02d"%(hours,minutes,seconds)
-        return "%3.0f h"%(hours) 
+        return "%3.0f h"%(hours)
 
     def select_time(self, ti, run=''):
-        self.imthl.set_data(self.thl[ti,:,:])
-        self.imqr.set_data(1000*self.qr[ti,:,:])
-        
-        txt = self.format_time(self.time[ti])
+        self.imthl.set_data(self.data.thl[ti,:,:])
+        self.imqr.set_data(1000*self.data.qr[ti,:,:])
+
+        txt = self.format_time(self.data.time[ti])
         if run:  #if run given, print just the run in the image
-            txt = run 
+            txt = run
         self.timetext.set_text(txt)
 
-    # times is a list of time points to plot, in hours    
+    # times is a list of time points to plot, in hours
     def plot(self, times=[24], run=None, filename=None):
         for t in times:
             t_sec = t*3600
-            ti = find_time_index(self.time, t_sec)
-            if np.abs(self.time[ti]-t_sec) < 600:
+            ti = find_time_index(self.data.time, t_sec)
+            if np.abs(self.data.time[ti]-t_sec) < 600:
                 self.select_time(ti, run)
                 if not filename:
                     f='coldpool%02d.png'%t
@@ -139,9 +135,9 @@ class Coldpool:
                 outfile=os.path.join(self.outdir, f)
                 self.fig.savefig(outfile)
 
-    
-    def movie(self, fps=24, run=''):    
-        nframes = self.time.shape[0]
+
+    def movie(self, fps=24, run=''):
+        nframes = self.data.time.shape[0]
         duration= nframes/fps
 
         def make_frame(t):
@@ -153,5 +149,3 @@ class Coldpool:
         animation = VideoClip(make_frame, duration=duration)
         outfile=os.path.join(self.outdir, 'coldpool.mp4')
         animation.write_videofile(outfile, fps=fps)
-
- 

@@ -40,8 +40,9 @@ def albedo(lwp, Nc=70000000):
     alb = tau/(6.8 + tau)
     return alb
 
+
 class Albedo:
-    def __init__(self, rundir, outdir=None, size=1080, colorbar=False, time_fmt=None):
+    def __init__(self, data, outdir=None, size=1080, colorbar=False, time_fmt=None):
 
 
         self.lwpmax = 1
@@ -50,21 +51,18 @@ class Albedo:
         color1 ='#0080ff00' # transparent cyan
         color2 ='#0080ffff' # solid cyan
         color1b='#ffffff' # solid white
-        
+
         cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap2',[color1,color2],256)
 
         self.outdir = outdir
         self.colorbar = colorbar
         self.time_fmt = time_fmt
-        cape_file = os.path.join(rundir, 'cape.nc')
-        self.cape = Dataset(cape_file, "r")
-        self.time = self.cape['/time']
-        self.lwp  = self.cape['/lwp']
-        self.rwp  = self.cape['/rwp']
-        
-        print('LWP range:', self.lwp[:,:,:].min(), self.lwp[:,:,:].max())
-        print('RWP range:', self.rwp[:,:,:].min(), self.rwp[:,:,:].max())
-        
+
+        self.data = data
+
+        print('LWP range:', self.data.lwp[:,:,:].min(), self.data.lwp[:,:,:].max())
+        print('RWP range:', self.data.rwp[:,:,:].min(), self.data.rwp[:,:,:].max())
+
         dpi = 80
         sizex = size
         if colorbar:
@@ -72,12 +70,12 @@ class Albedo:
         self.fig = plt.figure(figsize=(sizex/dpi, size/dpi), dpi=dpi)
 
         ti = 0
-        a = albedo(self.lwp[ti,:,:])
+        a = albedo(self.data.lwp[ti,:,:])
         self.imlwp = plt.imshow(a,           cmap='Greys_r', vmin=0, vmax=self.lwpmax)
-        self.imrwp = plt.imshow(self.rwp[ti,:,:], cmap=cmap, vmin=0, vmax=self.rwpmax)
-        
+        self.imrwp = plt.imshow(self.data.rwp[ti,:,:], cmap=cmap, vmin=0, vmax=self.rwpmax)
+
         plt.axis('off')
-        
+
 
         self.timetext = plt.text(.98, .05, "",
                                  horizontalalignment='right',
@@ -111,24 +109,24 @@ class Albedo:
         seconds = int(t)%60
         if self.time_fmt == 'hms':
             return "%3.0f:%02d:%02d"%(hours,minutes,seconds)
-        return "%3.0f h"%(hours) 
+        return "%3.0f h"%(hours)
 
     def select_time(self, ti, run=''):
         #imlwp.set_data(lwp[ti,:,:])
-        self.imlwp.set_data(self.lwp[ti,:,:])
-        self.imrwp.set_data(self.rwp[ti,:,:])
-        
-        txt = self.format_time(self.time[ti])
+        self.imlwp.set_data(self.data.lwp[ti,:,:])
+        self.imrwp.set_data(self.data.rwp[ti,:,:])
+
+        txt = self.format_time(self.data.time[ti])
         if run:  #if run given, print just the run in the image
-            txt = run 
+            txt = run
         self.timetext.set_text(txt)
 
-    # times is a list of time points to plot, in hours    
+    # times is a list of time points to plot, in hours
     def plot(self, times=[24], run=None, filename=None):
         for t in times:
             t_sec = t*3600
-            ti = find_time_index(self.time, t_sec)
-            if np.abs(self.time[ti]-t_sec) < 600:
+            ti = find_time_index(self.data.time, t_sec)
+            if np.abs(self.data.time[ti]-t_sec) < 600:
                 self.select_time(ti, run)
                 if not filename:
                     f='albedo%02d.png'%t
@@ -139,9 +137,9 @@ class Albedo:
                 outfile=os.path.join(self.outdir, f)
                 self.fig.savefig(outfile)
 
-    
-    def movie(self, fps=24, run=''):    
-        nframes = self.time.shape[0]
+
+    def movie(self, fps=24, run=''):
+        nframes = self.data.time.shape[0]
         duration= nframes/fps
 
         def make_frame(t):
@@ -153,5 +151,3 @@ class Albedo:
         animation = VideoClip(make_frame, duration=duration)
         outfile=os.path.join(self.outdir, 'albedo.mp4')
         animation.write_videofile(outfile, fps=fps)
-
- 

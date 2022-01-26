@@ -35,11 +35,11 @@ def find_time_index(times, t):
     return ti
 
 class TWP:
-    def __init__(self, rundir, outdir=None, size=1080, colorbar=False, time_fmt=None):
+    def __init__(self, data, outdir=None, size=1080, colorbar=False, time_fmt=None):
         #color1 ='#0080ff00' # transparent cyan
         #color2 ='#0080ffff' # solid cyan
         #color1b='#ffffff' # solid white
-        
+
         self.twpmin = 29
         self.twpmax = 60
 
@@ -48,13 +48,10 @@ class TWP:
         self.outdir = outdir
         self.colorbar = colorbar
         self.time_fmt = time_fmt
-        cape_file = os.path.join(rundir, 'cape.nc')
-        self.cape = Dataset(cape_file, "r")
-        self.time = self.cape['/time']
-        self.twp  = self.cape['/twp']
+        self.data = data
 
-        print('TWP range:', self.twp[:,:,:].min(), self.twp[:,:,:].max())
-        
+        print('TWP range:', self.data.twp[:,:,:].min(), self.data.twp[:,:,:].max())
+
         dpi = 80
         sizex = size
         if colorbar:
@@ -62,11 +59,11 @@ class TWP:
         self.fig = plt.figure(figsize=(sizex/dpi, size/dpi), dpi=dpi)
 
         ti = 0
-        self.im = plt.imshow(self.twp[ti,:,:], vmin=self.twpmin, vmax=self.twpmax)
+        self.im = plt.imshow(self.data.twp[ti,:,:], vmin=self.twpmin, vmax=self.twpmax)
         # cmap='Greys_r'
-        
+
         plt.axis('off')
-        
+
 
         self.timetext = plt.text(.98, .05, "",
                                  horizontalalignment='right',
@@ -100,23 +97,23 @@ class TWP:
         seconds = int(t)%60
         if self.time_fmt == 'hms':
             return "%3.0f:%02d:%02d"%(hours,minutes,seconds)
-        return "%3.0f h"%(hours) 
+        return "%3.0f h"%(hours)
 
     def select_time(self, ti, run=''):
         #imlwp.set_data(lwp[ti,:,:])
-        self.im.set_data(self.twp[ti,:,:])
-        
-        txt = self.format_time(self.time[ti])
+        self.im.set_data(self.data.twp[ti,:,:])
+
+        txt = self.format_time(self.data.time[ti])
         if run:  #if run given, print just the run in the image
-            txt = run 
+            txt = run
         self.timetext.set_text(txt)
 
-    # times is a list of time points to plot, in hours    
+    # times is a list of time points to plot, in hours
     def plot(self, times=[24], run=None, filename=None):
         for t in times:
             t_sec = t*3600
-            ti = find_time_index(self.time, t_sec)
-            if np.abs(self.time[ti]-t_sec) < 600:
+            ti = find_time_index(self.data.time, t_sec)
+            if np.abs(self.data.time[ti]-t_sec) < 600:
                 self.select_time(ti, run)
                 if not filename:
                     f='twp%02d.png'%t
@@ -127,9 +124,9 @@ class TWP:
                 outfile=os.path.join(self.outdir, f)
                 self.fig.savefig(outfile)
 
-    
-    def movie(self, fps=24, run=''):    
-        nframes = self.time.shape[0]
+
+    def movie(self, fps=24, run=''):
+        nframes = self.data.time.shape[0]
         duration= nframes/fps
 
         def make_frame(t):
@@ -141,5 +138,3 @@ class TWP:
         animation = VideoClip(make_frame, duration=duration)
         outfile=os.path.join(self.outdir, 'twp.mp4')
         animation.write_videofile(outfile, fps=fps)
-
- 
