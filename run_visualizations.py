@@ -56,12 +56,15 @@ else:
     sys.exit(1)
 
 run_dir = os.path.join(experiment_dir, 'runs')
+Runs = glob.glob(os.path.join(run_dir, 'Run_*'))
 thumbnail_dir = os.path.join(experiment_dir, 'thumbnails')
+
+if len(Runs) == 0: # there are no Run_NN directories in experiment_dir, treat it as a single run to process
+    Runs = [experiment_dir]
+    thumbnail_dir = experiment_dir
 
 if not os.path.isdir(thumbnail_dir):
     os.makedirs(thumbnail_dir)
-
-Runs = glob.glob(os.path.join(run_dir, 'Run_*'))
 
 for r in Runs:
     try:
