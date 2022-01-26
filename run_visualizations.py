@@ -96,7 +96,6 @@ for r in Runs:
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
     coldpool_viz.plot(times=plot_times)
     coldpool_viz.movie()
-    sys.exit()
 
     albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
     albedo_viz.plot(times=plot_times)
@@ -104,7 +103,6 @@ for r in Runs:
 
     thumbnail_viz = albedo.Albedo(cape, outdir=thumbnail_dir, colorbar=False, time_fmt=None, size=160)
     thumbnail_viz.plot(times=[48], filename='thumbnail.png')
-
 
     twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
     twp_viz.plot(times=plot_times)

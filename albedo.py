@@ -60,8 +60,8 @@ class Albedo:
 
         self.data = data
 
-        print('LWP range:', self.data.lwp[:,:,:].min(), self.data.lwp[:,:,:].max())
-        print('RWP range:', self.data.rwp[:,:,:].min(), self.data.rwp[:,:,:].max())
+        #print('LWP range:', self.data.lwp[:,:,:].min(), self.data.lwp[:,:,:].max())
+        #print('RWP range:', self.data.rwp[:,:,:].min(), self.data.rwp[:,:,:].max())
 
         dpi = 80
         sizex = size

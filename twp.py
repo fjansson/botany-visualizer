@@ -50,7 +50,7 @@ class TWP:
         self.time_fmt = time_fmt
         self.data = data
 
-        print('TWP range:', self.data.twp[:,:,:].min(), self.data.twp[:,:,:].max())
+        #print('TWP range:', self.data.twp[:,:,:].min(), self.data.twp[:,:,:].max())
 
         dpi = 80
         sizex = size

@@ -57,7 +57,7 @@ class Coldpool:
         self.colorbar = colorbar
         self.time_fmt = time_fmt
 
-        print('THL range:', self.data.thl[:,:,:].min(), self.data.thl[:,:,:].max())
+        #print('THL range:', self.data.thl[:,:,:].min(), self.data.thl[:,:,:].max())
 
         dpi = 80
         sizex = size
