@@ -96,19 +96,27 @@ for r in Runs:
     cape  = NC_loader(r,'cape')
     crossxy = NC_loader(r,'crossxy', 1)
 
-    coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
+    size = cape.lwp.shape[1] # number of cells in y
+    movie_size = min(size, 1080)
+    print(f'Still image size {size}')
+    print(f'Movie size {movie_size}')
+
+    coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     coldpool_viz.plot(times=plot_times)
+    coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
     coldpool_viz.movie()
 
-    albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
+    albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     albedo_viz.plot(times=plot_times)
+    albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
     albedo_viz.movie()
 
     thumbnail_viz = albedo.Albedo(cape, outdir=thumbnail_dir, colorbar=False, time_fmt=None, size=160)
     thumbnail_viz.plot(times=[48], filename='thumbnail.png')
 
-    twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt)
+    twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     twp_viz.plot(times=plot_times)
+    twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
     twp_viz.movie()
     #except:
     # pass
