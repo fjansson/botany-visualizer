@@ -110,9 +110,16 @@ class Coldpool:
             return "%3.0f:%02d:%02d"%(hours,minutes,seconds)
         return "%3.0f h"%(hours)
 
-    def select_time(self, ti, run=''):
-        self.imthl.set_data(self.data.thl[ti,:,:])
-        self.imqr.set_data(1000*self.data.qr[ti,:,:])
+    def select_time(self, ti, run='', vx=0, vy=0):
+        thl = self.data.thl[ti,:,:]
+        qr  = 1000*self.data.qr[ti,:,:]
+        if vx or vy:
+            dx = vx*ti
+            dy = vy*ti
+            thl = np.roll(thl, (-dy, -dx), (0,1))
+            qr  = np.roll(qr,  (-dy, -dx), (0,1))
+        self.imthl.set_data(thl)
+        self.imqr.set_data(qr)
 
         txt = self.format_time(self.data.time[ti])
         if run:  #if run given, print just the run in the image
@@ -136,14 +143,14 @@ class Coldpool:
                 self.fig.savefig(outfile)
 
 
-    def movie(self, fps=24, run=''):
+    def movie(self, fps=24, run='', vx=0, vy=0):
         nframes = self.data.time.shape[0]
         duration= nframes/fps
 
         def make_frame(t):
             nonlocal self, fps, run
             ti = int(t*fps+.5)
-            self.select_time(ti, run)
+            self.select_time(ti, run, vx=vx, vy=vy)
             return mplfig_to_npimage(self.fig)
 
         animation = VideoClip(make_frame, duration=duration)

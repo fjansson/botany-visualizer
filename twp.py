@@ -99,9 +99,13 @@ class TWP:
             return "%3.0f:%02d:%02d"%(hours,minutes,seconds)
         return "%3.0f h"%(hours)
 
-    def select_time(self, ti, run=''):
-        #imlwp.set_data(lwp[ti,:,:])
-        self.im.set_data(self.data.twp[ti,:,:])
+    def select_time(self, ti, run='', vx=0, vy=0):
+        twp = self.data.twp[ti,:,:]
+        if vx or vy:
+            dx = vx*ti
+            dy = vy*ti
+            twp = np.roll(twp, (-dy, -dx), (0,1))
+        self.im.set_data(twp)
 
         txt = self.format_time(self.data.time[ti])
         if run:  #if run given, print just the run in the image
@@ -125,14 +129,14 @@ class TWP:
                 self.fig.savefig(outfile)
 
 
-    def movie(self, fps=24, run=''):
+    def movie(self, fps=24, run='', vx=0, vy=0):
         nframes = self.data.time.shape[0]
-        duration= nframes/fps
+        Duration= nframes/fps
 
         def make_frame(t):
             nonlocal self, fps, run
             ti = int(t*fps+.5)
-            self.select_time(ti, run)
+            self.select_time(ti, run, vx=vx, vy=vy)
             return mplfig_to_npimage(self.fig)
 
         animation = VideoClip(make_frame, duration=duration)

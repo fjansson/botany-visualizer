@@ -4,10 +4,14 @@ import thumbnail
 import coldpool
 import albedo
 import twp
+import webpage
+
 import glob
 import os
 import sys
 from netCDF4 import Dataset
+
+
 
 # open netcdf dataset(s), either from one single file or
 # from files per variable
@@ -66,6 +70,9 @@ if len(Runs) == 0: # there are no Run_NN directories in experiment_dir, treat it
 if not os.path.isdir(thumbnail_dir):
     os.makedirs(thumbnail_dir)
 
+visualization_dirs = [] # list of output directories, used for webpage
+                        # to do: more structure, pass also run parameters
+                        # to do: use relative paths
 for r in Runs:
     try:
         run_name = r.split('Run_')[1]
@@ -80,8 +87,11 @@ for r in Runs:
 
     # create visualizations directory in run dir
     outdir = os.path.join(r, 'visualizations')
+
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
+
+    visualization_dirs.append(outdir)
 
     #HEEPS plot settings:
     #colorbar = True
@@ -101,24 +111,34 @@ for r in Runs:
     print(f'Still image size {size}')
     print(f'Movie size {movie_size}')
 
-    coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
-    coldpool_viz.plot(times=plot_times)
-    coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    coldpool_viz.movie()
+    vx=-50 # camera drift velocity in grid cells/frame
+    vy=-10
+
+    #coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
+    #coldpool_viz.plot(times=plot_times)
+    #coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
+    #coldpool_viz.movie(vx=vx, vy=vy)
 
     albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     albedo_viz.plot(times=plot_times)
     albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    albedo_viz.movie()
+    albedo_viz.movie(vx=vx, vy=vy)
 
+    # bug: all runs written to the same name
     thumbnail_viz = albedo.Albedo(cape, outdir=thumbnail_dir, colorbar=False, time_fmt=None, size=160)
     thumbnail_viz.plot(times=[48], filename='thumbnail.png')
+
+    # place another thumbnail in the output directory of this job
+    thumbnail_viz = albedo.Albedo(cape, outdir=outdir, colorbar=False, time_fmt=None, size=160)
+    thumbnail_viz.plot(times=[48], filename='thumbnail.png', text=run_name)
 
     twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     twp_viz.plot(times=plot_times)
     twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    twp_viz.movie()
+    twp_viz.movie(vx=vx, vy=vy)
     #except:
     # pass
         # to handle broken runs / missing input files
         # also catches control-C - annoying
+
+webpage.index(visualization_dirs)
