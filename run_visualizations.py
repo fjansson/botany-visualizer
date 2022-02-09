@@ -4,6 +4,7 @@ import thumbnail
 import coldpool
 import albedo
 import twp
+import flux
 import webpage
 
 import glob
@@ -21,7 +22,7 @@ class NC_loader:
         self.path = path
         sources = {
             'cape'      : {'filename':'cape',                'fields':('lwp', 'rwp', 'twp', 'cldtop')},
-            'crossxy'   : {'filename':f'crossxy.{level:04}', 'fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
+            'crossxy'   : {'filename':f'crossxy', 'fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
             'fielddump' : {'filename':'fielddump',           'fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
         }
 
@@ -35,22 +36,36 @@ class NC_loader:
                           'qr' : 'qrxy',
                           }
 
+        if dataset=='crossxy':
+            level=f'.{level:04}'
+        else:
+            level=''
+            
         source = sources[dataset]
         filename = os.path.join(path, source['filename'])
 
         ds = None
-        if os.path.exists(filename+'.nc'):
-            ds = Dataset(filename+'.nc', "r")
+        if os.path.exists(filename+level+'.nc'):
+            ds = Dataset(filename+level+'.nc', "r")
 
         for field in source['fields']:
             if ds:
                 ds_f = ds
             else:
-                ds_f = Dataset(filename+'-'+field+'.nc', "r")
+                ds_f = Dataset(filename+'-'+field+level+'.nc', "r")
             varname = rename_mapping.get(field, field)
             setattr(self, field, ds_f[varname])
 
         self.time = ds_f['time'] # read time coordinate from the last file processed
+
+        # get coordinate arrays from last file processed - they may not all exist
+        for c in ['xt', 'yt', 'zt']:
+            try:
+                setattr(self, 'c', ds_f[c][:])
+            except:
+                setattr(self, 'c', None)
+
+        
 
 
 if len(sys.argv) > 1:
@@ -105,37 +120,46 @@ for r in Runs:
 
     cape  = NC_loader(r,'cape')
     crossxy = NC_loader(r,'crossxy', 1)
-
+    crossxy13 = NC_loader(r,'crossxy', 13)
+    
     size = cape.lwp.shape[1] # number of cells in y
     movie_size = min(size, 1080)
     print(f'Still image size {size}')
     print(f'Movie size {movie_size}')
 
-    vx=-50 # camera drift velocity in grid cells/frame
+    vx=-60 # camera drift velocity in grid cells/frame
     vy=-10
-
-    #coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
-    #coldpool_viz.plot(times=plot_times)
-    #coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    #coldpool_viz.movie(vx=vx, vy=vy)
+    framerate=20
+    
+    coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
+    coldpool_viz.plot(times=plot_times)
+    coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
+    coldpool_viz.movie(vx=vx, vy=vy, fps=framerate)
 
     albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     albedo_viz.plot(times=plot_times)
     albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    albedo_viz.movie(vx=vx, vy=vy)
+    albedo_viz.movie(vx=vx, vy=vy, fps=framerate)
 
     # bug: all runs written to the same name
-    thumbnail_viz = albedo.Albedo(cape, outdir=thumbnail_dir, colorbar=False, time_fmt=None, size=160)
-    thumbnail_viz.plot(times=[48], filename='thumbnail.png')
+    #thumbnail_viz = albedo.Albedo(cape, outdir=thumbnail_dir, colorbar=False, time_fmt=None, size=160)
+    #thumbnail_viz.plot(times=[48], filename='thumbnail.png')
 
     # place another thumbnail in the output directory of this job
-    thumbnail_viz = albedo.Albedo(cape, outdir=outdir, colorbar=False, time_fmt=None, size=160)
-    thumbnail_viz.plot(times=[48], filename='thumbnail.png', text=run_name)
+    thumbnail_viz = albedo.Albedo(cape, outdir=outdir, colorbar=False, time_fmt=None, size=160, text=run_name)
+    thumbnail_viz.plot(times=[48], filename='thumbnail.png')
 
     twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     twp_viz.plot(times=plot_times)
     twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    twp_viz.movie(vx=vx, vy=vy)
+    twp_viz.movie(vx=vx, vy=vy, fps=framerate)
+
+    flux_viz = flux.Flux(crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
+    flux_viz.plot(times=plot_times)
+    flux_viz = flux.Flux(crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
+    flux_viz.movie(vx=vx, vy=vy, fps=framerate)
+
+    
     #except:
     # pass
         # to handle broken runs / missing input files
