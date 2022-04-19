@@ -35,11 +35,11 @@ def index(experiment_dir, visualization_dirs):
     </html>
     """, file=outfile)
 
-    for d,params in visualization_dirs:
+    for d,run in visualization_dirs:
         # copy webpage template (possibly use template engine later)
         #sdir = os.path.dirname(os.path.abspath(__file__))
         #shutil.copyfile(os.path.join(sdir,'run_index.html'),
         #               os.path.join(d,'index.html'))
         dest = os.path.join(d,'index.html')
         outfile = open(dest, 'wt')
-        print(template.render(params=params), file=outfile)
+        print(template.render(params=run), file=outfile)

@@ -6,22 +6,54 @@ import albedo
 import twp
 import flux
 import webpage
+import profiles
+import thermo
 
 import glob
 import os
 import sys
 from netCDF4 import Dataset
 import f90nml
+import types
+import numpy as np
 
 class Dales_loader:
-    def __init__(self, path):
-        name = os.path.join(path, 'namoptions.001')
+    def __init__(self, path, exp_nr='001'):
+        try:
+            self.name = path.split('/')[-1] # last part of path as run name
+        except:
+            self.name = 'run'
+
+        name = os.path.join(path, f'namoptions.{exp_nr}')
         self.nml = f90nml.read(name)
         self.params = self.nml['VVUQ_extra'] # the parameters varied
+
+        self.ps   = self.nml['PHYSICS']['ps']
+        self.thls = self.nml['PHYSICS']['thls']
+
+        prof = np.loadtxt(os.path.join(path,f'prof.inp.{exp_nr}'))
+        lscale = np.loadtxt(os.path.join(path,f'lscale.inp.{exp_nr}'))
+
+        self.init = types.SimpleNamespace()
+        self.init.z = lscale[:,0]
+        self.init.lw = lscale[:,3]
+        self.init.thl = prof[:,1]
+        self.init.qt  = prof[:,2]
+        self.init.u   = prof[:,3]
+        self.init.v   = prof[:,4]
+        self.init.pres = thermo.pressure(self.init.z, self.ps, self.thls)
+        self.init.T,self.init.ql = thermo.T_and_ql(self.init.thl, self.init.qt, self.init.pres)
+        self.init.qsat = thermo.qsatur(self.init.T, self.init.pres)
+        self.init.RH = 100 * self.init.qt / self.init.qsat  # clamp to 100% or not?
         try:
-            self.run = path.split('/')[-1] # last part of path as run name
+            nudge = np.loadtxt(os.path.join(d,'nudge.inp.001'),
+                               skiprows=3, max_rows=len(z))
+            self.init.tau = nudge[:,1] # nudging time
         except:
-            self.run = 'run'
+            nudge = None
+            self.init.tau = None
+
+
 
 # open netcdf dataset(s), either from one single file or
 # from files per variable
@@ -76,6 +108,7 @@ class NC_loader:
 
 
 
+make_movie = False
 
 if len(sys.argv) > 1:
     experiment_dir = sys.argv[1]
@@ -104,7 +137,7 @@ for r in Runs:
         run_name = ''
     print(r, run_name)
 
-    params = Dales_loader(r)
+    dales = Dales_loader(r)
 
     #Thumbnail
     #thumbnail.make_thumbnail(rundir=r, outdir=thumbnail_dir, run=run_name)
@@ -117,7 +150,7 @@ for r in Runs:
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
 
-    visualization_dirs.append((outdir, params))
+    visualization_dirs.append((outdir, dales))
 
     #HEEPS plot settings:
     #colorbar = True
@@ -142,15 +175,19 @@ for r in Runs:
     vy=-10
     framerate=20
 
+    profiles.plot_initial(dales, outdir=outdir)
+
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     coldpool_viz.plot(times=plot_times)
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    coldpool_viz.movie(vx=vx, vy=vy, fps=framerate)
+    if make_movie:
+        coldpool_viz.movie(vx=vx, vy=vy, fps=framerate)
 
     albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     albedo_viz.plot(times=plot_times)
     albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    albedo_viz.movie(vx=vx, vy=vy, fps=framerate)
+    if make_movie:
+        albedo_viz.movie(vx=vx, vy=vy, fps=framerate)
 
     # bug: all runs written to the same name
     #thumbnail_viz = albedo.Albedo(cape, outdir=thumbnail_dir, colorbar=False, time_fmt=None, size=160)
@@ -163,12 +200,14 @@ for r in Runs:
     twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     twp_viz.plot(times=plot_times)
     twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    twp_viz.movie(vx=vx, vy=vy, fps=framerate)
+    if make_movie:
+        twp_viz.movie(vx=vx, vy=vy, fps=framerate)
 
     flux_viz = flux.Flux(crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     flux_viz.plot(times=plot_times)
     flux_viz = flux.Flux(crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
-    flux_viz.movie(vx=vx, vy=vy, fps=framerate)
+    if make_movie:
+        flux_viz.movie(vx=vx, vy=vy, fps=framerate)
 
 
     #except:
