@@ -11,8 +11,17 @@ import glob
 import os
 import sys
 from netCDF4 import Dataset
+import f90nml
 
-
+class Dales_loader:
+    def __init__(self, path):
+        name = os.path.join(path, 'namoptions.001')
+        self.nml = f90nml.read(name)
+        self.params = self.nml['VVUQ_extra'] # the parameters varied
+        try:
+            self.run = path.split('/')[-1] # last part of path as run name
+        except:
+            self.run = 'run'
 
 # open netcdf dataset(s), either from one single file or
 # from files per variable
@@ -40,7 +49,7 @@ class NC_loader:
             level=f'.{level:04}'
         else:
             level=''
-            
+
         source = sources[dataset]
         filename = os.path.join(path, source['filename'])
 
@@ -65,7 +74,7 @@ class NC_loader:
             except:
                 setattr(self, 'c', None)
 
-        
+
 
 
 if len(sys.argv) > 1:
@@ -95,6 +104,8 @@ for r in Runs:
         run_name = ''
     print(r, run_name)
 
+    params = Dales_loader(r)
+
     #Thumbnail
     #thumbnail.make_thumbnail(rundir=r, outdir=thumbnail_dir, run=run_name)
     # placeholder thumbnail: albedo
@@ -106,7 +117,7 @@ for r in Runs:
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
 
-    visualization_dirs.append(outdir)
+    visualization_dirs.append((outdir, params))
 
     #HEEPS plot settings:
     #colorbar = True
@@ -121,7 +132,7 @@ for r in Runs:
     cape  = NC_loader(r,'cape')
     crossxy = NC_loader(r,'crossxy', 1)
     crossxy13 = NC_loader(r,'crossxy', 13)
-    
+
     size = cape.lwp.shape[1] # number of cells in y
     movie_size = min(size, 1080)
     print(f'Still image size {size}')
@@ -130,7 +141,7 @@ for r in Runs:
     vx=-60 # camera drift velocity in grid cells/frame
     vy=-10
     framerate=20
-    
+
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     coldpool_viz.plot(times=plot_times)
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
@@ -159,10 +170,10 @@ for r in Runs:
     flux_viz = flux.Flux(crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
     flux_viz.movie(vx=vx, vy=vy, fps=framerate)
 
-    
+
     #except:
     # pass
         # to handle broken runs / missing input files
         # also catches control-C - annoying
 
-webpage.index(visualization_dirs)
+webpage.index(experiment_dir, visualization_dirs)
