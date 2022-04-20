@@ -65,7 +65,8 @@ class NC_loader:
             'cape'      : {'filename':'cape',     'fields':('lwp', 'rwp', 'twp', 'cldtop')},
             'crossxy'   : {'filename':f'crossxy', 'fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
             'fielddump' : {'filename':'fielddump','fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
-            'profiles'  : {'filename':f'profiles.{exp_nr}', 'fields':('zt', 'u', 'v', 'thl', 'qt', 'ql')}
+            'profiles'  : {'filename':f'profiles.{exp_nr}', 'fields':('zt', 'u', 'v', 'thl', 'qt', 'ql')},
+            'tmser'     : {'filename':f'tmser.{exp_nr}', 'fields':('cfrac', 'lwp_bar', 'zb', 'zi', 'zc_max')},
         }
 
         rename_mapping = {'qr' : 'sv002',   # experimental remapping of variable names
@@ -114,7 +115,7 @@ class NC_loader:
 
 
 
-make_movie = False
+make_movie = True
 
 if len(sys.argv) > 1:
     experiment_dir = sys.argv[1]
@@ -123,7 +124,7 @@ else:
     sys.exit(1)
 
 run_dir = os.path.join(experiment_dir, 'runs')
-Runs = glob.glob(os.path.join(run_dir, 'Run_*'))
+Runs = glob.glob(os.path.join(run_dir, '*un_*')) #match borth Run_NN and run_NN
 thumbnail_dir = os.path.join(experiment_dir, 'thumbnails')
 
 if len(Runs) == 0: # there are no Run_NN directories in experiment_dir, treat it as a single run to process
@@ -168,10 +169,16 @@ for r in Runs:
     time_fmt = 'h'
     plot_times = [24, 48, 72, 96]
 
-    cape      = NC_loader(r,'cape')
-    crossxy   = NC_loader(r,'crossxy', 1)
-    crossxy13 = NC_loader(r,'crossxy', 13)
-    profiles  = NC_loader(r,'profiles')
+    try:
+        cape      = NC_loader(r,'cape')
+        crossxy   = NC_loader(r,'crossxy', 1)
+        crossxy13 = NC_loader(r,'crossxy', 13)
+        profiles  = NC_loader(r,'profiles')
+        tmser     = NC_loader(r,'tmser')
+    except:
+        print("Failed to load netCDFs, continuing with other runs.")
+        continue
+        
     size = cape.lwp.shape[1] # number of cells in y
     movie_size = min(size, 1080)
     print(f'Still image size {size}')
@@ -184,6 +191,8 @@ for r in Runs:
     profileplot.plot_initial(dales, outdir=outdir)
     profileplot.plot_profile(profiles, dales, outdir=outdir,
                              times=[12,24,36,48])
+    profileplot.time_plot(tmser, cape, outdir=outdir)
+
     
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     coldpool_viz.plot(times=plot_times)

@@ -165,3 +165,30 @@ def plot_profile(prof, dales, outdir='./', times=[12]):
     plt.legend()
     plt.savefig(os.path.join(outdir, filename))
     
+
+def time_plot(tmser, cape, outdir='./'):
+    fig, axes = plt.subplots(figsize=(8,4), nrows=2, ncols=1, sharex=True, squeeze=False)
+
+    for ax in axes[:,0]:
+        ax.xaxis.label.set_fontsize(10)
+        ax.yaxis.label.set_fontsize(10)
+        ax.tick_params(axis='x', labelsize=8)
+        ax.tick_params(axis='y', labelsize=8)
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        
+    time = tmser.time[:] / 3600
+    axes[0,0].plot(time, tmser.cfrac[:], label='cfrac')
+    axes[0,0].set_ylim(bottom=0, top=1)
+    axes[0,0].set(ylabel='cfrac')
+    
+    axes[1,0].plot(time, tmser.lwp_bar, label='LWP')
+    #axes[1,0].set_ylim(bottom=0, top=1)
+    axes[1,0].set(ylabel=r'LWP (kg/m$^2$)')
+
+    axes[1,0].set(xlabel='time (h)')
+    
+    filename='timeplot.png'
+    plt.savefig(os.path.join(outdir, filename))
+
+    
