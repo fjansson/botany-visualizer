@@ -6,7 +6,7 @@ import albedo
 import twp
 import flux
 import webpage
-import profiles
+import profileplot
 import thermo
 
 import glob
@@ -59,12 +59,13 @@ class Dales_loader:
 # from files per variable
 # dataset: 'cape', 'crossxy', 'fielddump'
 class NC_loader:
-    def __init__(self, path, dataset, level=1):
+    def __init__(self, path, dataset, level=1, exp_nr='001'):
         self.path = path
         sources = {
-            'cape'      : {'filename':'cape',                'fields':('lwp', 'rwp', 'twp', 'cldtop')},
+            'cape'      : {'filename':'cape',     'fields':('lwp', 'rwp', 'twp', 'cldtop')},
             'crossxy'   : {'filename':f'crossxy', 'fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
-            'fielddump' : {'filename':'fielddump',           'fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
+            'fielddump' : {'filename':'fielddump','fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
+            'profiles'  : {'filename':f'profiles.{exp_nr}', 'fields':('zt', 'u', 'v', 'thl', 'qt', 'ql')}
         }
 
         rename_mapping = {'qr' : 'sv002',   # experimental remapping of variable names
@@ -86,6 +87,7 @@ class NC_loader:
         filename = os.path.join(path, source['filename'])
 
         ds = None
+        print ('looking for ' + filename+level+'.nc')
         if os.path.exists(filename+level+'.nc'):
             ds = Dataset(filename+level+'.nc', "r")
 
@@ -93,8 +95,12 @@ class NC_loader:
             if ds:
                 ds_f = ds
             else:
+                print ('looking for ' + filename+'-'+field+level+'.nc')
                 ds_f = Dataset(filename+'-'+field+level+'.nc', "r")
-            varname = rename_mapping.get(field, field)
+            if dataset == 'crossxy':
+                varname = rename_mapping.get(field, field)
+            else:
+                varname = field
             setattr(self, field, ds_f[varname])
 
         self.time = ds_f['time'] # read time coordinate from the last file processed
@@ -162,10 +168,10 @@ for r in Runs:
     time_fmt = 'h'
     plot_times = [24, 48, 72, 96]
 
-    cape  = NC_loader(r,'cape')
-    crossxy = NC_loader(r,'crossxy', 1)
+    cape      = NC_loader(r,'cape')
+    crossxy   = NC_loader(r,'crossxy', 1)
     crossxy13 = NC_loader(r,'crossxy', 13)
-
+    profiles  = NC_loader(r,'profiles')
     size = cape.lwp.shape[1] # number of cells in y
     movie_size = min(size, 1080)
     print(f'Still image size {size}')
@@ -175,8 +181,10 @@ for r in Runs:
     vy=-10
     framerate=20
 
-    profiles.plot_initial(dales, outdir=outdir)
-
+    profileplot.plot_initial(dales, outdir=outdir)
+    profileplot.plot_profile(profiles, dales, outdir=outdir,
+                             times=[12,24,36,48])
+    
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     coldpool_viz.plot(times=plot_times)
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)

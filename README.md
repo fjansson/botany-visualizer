@@ -20,7 +20,7 @@ conda install -c conda-forge moviepy
 ### Alternative using pip
 
 ```
-pip install matplotlib netcdf4 pillow moviepy
+pip install matplotlib netcdf4 pillow moviepy f90nml
 ```
 
 (not fully tested)

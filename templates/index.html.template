@@ -3,7 +3,6 @@
     <body>
       <h1>{{run.name}}</h1>
 
-      <h2>parameters</h2>
       <table>
 	<tr><td>thls</td>     <td>{{run.thls}}</td>      <td>K</td></tr>
 	<tr><td>u0</td>       <td>{{run.params.u0}}</td>        <td>m/s</td></tr>
@@ -13,9 +12,11 @@
 	<tr><td>wpamp</td>    <td>{{run.params.wpamp}}</td>     <td>m/s</td></tr>
       </table>
 
-      <h2>Initial profiles</h2>
-      <img src="profiles-initial.png">
 
+      <h2>Profiles</h2>
+      <img src="profiles.png">
+      <br>
+      
 	<video width="500" controls>
 	    <source src="albedo.mp4" type="video/mp4">
 	    Your browser does not support the video tag.

@@ -42,4 +42,4 @@ def index(experiment_dir, visualization_dirs):
         #               os.path.join(d,'index.html'))
         dest = os.path.join(d,'index.html')
         outfile = open(dest, 'wt')
-        print(template.render(params=run), file=outfile)
+        print(template.render({'run':run}), file=outfile)
