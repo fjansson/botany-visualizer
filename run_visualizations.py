@@ -115,7 +115,7 @@ class NC_loader:
 
 
 
-make_movie = False 
+make_movie = False
 
 if len(sys.argv) > 1:
     experiment_dir = sys.argv[1]
@@ -130,6 +130,8 @@ thumbnail_dir = os.path.join(experiment_dir, 'thumbnails')
 if len(Runs) == 0: # there are no Run_NN directories in experiment_dir, treat it as a single run to process
     Runs = [experiment_dir]
     thumbnail_dir = experiment_dir
+
+
 
 if not os.path.isdir(thumbnail_dir):
     os.makedirs(thumbnail_dir)
@@ -178,7 +180,7 @@ for r in Runs:
     except:
         print("Failed to load netCDFs, continuing with other runs.")
         continue
-        
+
     size = cape.lwp.shape[1] # number of cells in y
     movie_size = min(size, 1080)
     print(f'Still image size {size}')
@@ -193,7 +195,7 @@ for r in Runs:
                              times=[12,24,36,48])
     profileplot.time_plot(tmser, cape, outdir=outdir)
 
-    
+
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     coldpool_viz.plot(times=plot_times)
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
@@ -231,5 +233,11 @@ for r in Runs:
     # pass
         # to handle broken runs / missing input files
         # also catches control-C - annoying
+
+# sort runs by run number, to order the thumbnails
+try:
+    visualization_dirs.sort(key=lambda d: int(d[0].split('un_')[-1].split('/')[0]))
+except:
+    pass
 
 webpage.index(experiment_dir, visualization_dirs)
