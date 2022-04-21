@@ -167,7 +167,7 @@ def plot_profile(prof, dales, outdir='./', times=[12]):
     
 
 def time_plot(tmser, cape, outdir='./'):
-    fig, axes = plt.subplots(figsize=(8,4), nrows=2, ncols=1, sharex=True, squeeze=False)
+    fig, axes = plt.subplots(figsize=(8,6), nrows=4, ncols=1, sharex=True, squeeze=False)
 
     for ax in axes[:,0]:
         ax.xaxis.label.set_fontsize(10)
@@ -178,15 +178,30 @@ def time_plot(tmser, cape, outdir='./'):
         ax.spines['top'].set_visible(False)
         
     time = tmser.time[:] / 3600
-    axes[0,0].plot(time, tmser.cfrac[:], label='cfrac')
-    axes[0,0].set_ylim(bottom=0, top=1)
+    cfrac = np.maximum(tmser.cfrac[:], 0)
+    axes[0,0].plot(time, cfrac, label='cfrac')
+    #axes[0,0].set_ylim(bottom=0, top=1)
     axes[0,0].set(ylabel='cfrac')
     
-    axes[1,0].plot(time, tmser.lwp_bar, label='LWP')
+    #axes[1,0].plot(time, tmser.lwp_bar, label='LWP')
     #axes[1,0].set_ylim(bottom=0, top=1)
-    axes[1,0].set(ylabel=r'LWP (kg/m$^2$)')
+    #axes[1,0].set(ylabel=r'LWP (kg/m$^2$)')
 
-    axes[1,0].set(xlabel='time (h)')
+    axes[3,0].set(xlabel='time (h)')
+
+    time = cape.time[:] / 3600
+    lwp = np.mean(cape.lwp[:,:,:], axis=(1,2))*1000
+    rwp = np.mean(cape.rwp[:,:,:], axis=(1,2))*1000
+    twp = np.mean(cape.twp[:,:,:], axis=(1,2))
+    axes[1,0].plot(time, lwp, label='LWP')
+    axes[1,0].set(ylabel='LWP (g/m$^2$)')
+    axes[2,0].plot(time, rwp, label='RWP')
+    axes[2,0].set(ylabel='RWP (g/m$^2$)')
+    axes[3,0].plot(time, twp, label='TWP')
+    axes[3,0].set(ylabel='TWP (kg/m$^2$)')
+    
+
+    
     
     filename='timeplot.png'
     plt.savefig(os.path.join(outdir, filename))

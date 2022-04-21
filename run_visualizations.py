@@ -115,7 +115,7 @@ class NC_loader:
 
 
 
-make_movie = True
+make_movie = False 
 
 if len(sys.argv) > 1:
     experiment_dir = sys.argv[1]
@@ -139,7 +139,7 @@ visualization_dirs = [] # list of output directories, used for webpage
                         # to do: use relative paths
 for r in Runs:
     try:
-        run_name = r.split('Run_')[1]
+        run_name = r.split('un_')[1] # match run_NN or Run_NN
     except:
         run_name = ''
     print(r, run_name)
