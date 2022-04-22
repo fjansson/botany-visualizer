@@ -3,7 +3,7 @@
     <body>
       <h1>{{run.name}}</h1>
 
-      <a href="../../index.html">index</a>
+      <a href="../../../index.html">index</a>
       
       <table>
 	<tr><td>thls</td>     <td>{{run.thls}}</td>      <td>K</td></tr>
@@ -12,6 +12,9 @@
 	<tr><td>qt_lambda</td><td>{{run.params.qt_lambda}}</td> <td>m</td></tr>
 	<tr><td>thl_Gamma</td><td>{{run.params.thl_Gamma}}</td> <td>K/km</td></tr>
 	<tr><td>wpamp</td>    <td>{{'%0.3f'%(run.params.wpamp*100)}}</td>     <td>cm/s</td></tr>
+	<tr></tr>
+	<tr><td>dx</td>     <td>{{run.dx}}</td>          <td>m</td></tr>
+	<tr><td>xsize</td>  <td>{{run.xsize/1000}}</td>  <td>km</td></tr>
       </table>
 
 
@@ -33,6 +36,11 @@
       
       <video width="500" controls>
 	<source src="twp.mp4" type="video/mp4">
+	  Your browser does not support the video tag.
+      </video>
+
+      <video width="500" controls>
+	<source src="flux.mp4" type="video/mp4">
 	  Your browser does not support the video tag.
       </video>
       

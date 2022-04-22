@@ -28,6 +28,12 @@ class Dales_loader:
         self.nml = f90nml.read(name)
         self.params = self.nml['VVUQ_extra'] # the parameters varied
 
+        self.itot   = self.nml['DOMAIN']['itot']
+        self.jtot   = self.nml['DOMAIN']['jtot']
+        self.xsize  = self.nml['DOMAIN']['xsize']
+        self.ysize  = self.nml['DOMAIN']['ysize']
+        self.dx = self.xsize / self.itot
+        self.dy = self.ysize / self.jtot
         self.ps   = self.nml['PHYSICS']['ps']
         self.thls = self.nml['PHYSICS']['thls']
 
@@ -186,8 +192,30 @@ for r in Runs:
     print(f'Still image size {size}')
     print(f'Movie size {movie_size}')
 
-    vx=-60 # camera drift velocity in grid cells/frame
-    vy=-10
+    # drift velocity for movies
+    # note assumes same output frequency for all fields
+
+    # find index of the array element closest to t
+    def find_index_nearest(times, t):
+        ti = np.abs((times[:]-t)).argmin()
+        return ti
+
+    zt = profiles.zt
+    zb = tmser.zb[:]
+    zbm = np.mean(zb[zb>0])
+    ib = find_index_nearest(zt, zbm) # z index of cloud base
+    print(f'Mean zb: {zbm} m, index: {ib}')
+    ub = np.mean(profiles.u[:, ib])
+    vb = np.mean(profiles.v[:, ib])
+    print(f'Mean wind at mean cloud base ({ub}, {vb}) m/s')
+    dt = cape.time[1] - cape.time[0] # frame interval
+    print(f'dx: {dales.dx}m, dy: {dales.dy}m, dt: {dt}s')
+
+    vx = int(ub / dales.dx * dt)
+    vy = int(vb / dales.dy * dt)
+    print (f'camera drift velocity in grid cells/frame ({vx}, {vy})')
+    #vx=-60 # camera drift velocity in grid cells/frame
+    #vy=-10
     framerate=20
 
     profileplot.plot_initial(dales, outdir=outdir)
@@ -222,9 +250,9 @@ for r in Runs:
     if make_movie:
         twp_viz.movie(vx=vx, vy=vy, fps=framerate)
 
-    flux_viz = flux.Flux(crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
+    flux_viz = flux.Flux(dales, crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     flux_viz.plot(times=plot_times)
-    flux_viz = flux.Flux(crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
+    flux_viz = flux.Flux(dales, crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
     if make_movie:
         flux_viz.movie(vx=vx, vy=vy, fps=framerate)
 

@@ -15,7 +15,7 @@ from netCDF4 import Dataset, num2date, date2index # pip install netCDF4
 from plot import Plot
 
 class Flux(Plot):
-    def __init__(self, data, outdir=None, size=1080, colorbar=False, time_fmt=None, dx=0, dy=0):
+    def __init__(self, dales, data, outdir=None, size=1080, colorbar=False, time_fmt=None, dx=0, dy=0):
         super().__init__(data, outdir, size, colorbar, time_fmt)
 
         color1 ='#0080ff00' # transparent cyan
@@ -23,6 +23,7 @@ class Flux(Plot):
         color1b='#ffffff' # solid white
         self.moviename = 'flux.mp4'        
         self.plotname = 'flux'
+        self.dales = dales
         
         cmap = 'bwr' # mpl.colors.LinearSegmentedColormap.from_list('my_cmap2',[color1,color2],256)
 
@@ -72,7 +73,7 @@ class Flux(Plot):
 
         # low-pass filter. Gaussian, with periodic boundary conditions.
         length = 5000 # 5 km length scale
-        dx = 100       # to do get dx from data
+        dx = self.dales.dx
         sigma = length / dx
         wthlv_f = sp.ndimage.gaussian_filter(wthlv, sigma, mode='wrap', truncate=3)  
         flux = wthlv_f - wthlv_av # low-pass-filtered flux anomaly from mean
