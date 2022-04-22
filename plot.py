@@ -42,9 +42,9 @@ class Plot:
             sizex *= 4/3
         self.fig = plt.figure(figsize=(sizex/dpi, size/dpi), dpi=dpi)
         
-        self.timetext = plt.text(.98, .05, "",
+        self.timetext = plt.text(.98, .98, "",  #y was 0.05
                                  horizontalalignment='right',
-                                 #verticalalignment='center',
+                                 verticalalignment='top',
                                  #transform=fig.gca().transAxes,
                                  transform=plt.gcf().transFigure,
                                  color='#ffbbcc',

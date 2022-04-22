@@ -9,6 +9,7 @@ import webpage
 import profileplot
 import thermo
 
+import argparse
 import glob
 import os
 import sys
@@ -120,14 +121,24 @@ class NC_loader:
                 setattr(self, 'c', None)
 
 
+parser = argparse.ArgumentParser(description="DALES output visualization",
+                                 fromfile_prefix_chars='@')
 
-make_movie = False
+parser.add_argument('directory', metavar='directory', type=str,
+                    help='Base directory for the runs')
+parser.add_argument("--nomovie", action="store_true", default=False,
+                    help="Don't create movies.")
 
-if len(sys.argv) > 1:
-    experiment_dir = sys.argv[1]
-else:
-    print('usage example: run_visualizations.py /home/hp200321/data/botany-6-768/')
-    sys.exit(1)
+args = parser.parse_args()
+
+make_movie = not args.nomovie
+experiment_dir = args.directory
+
+#if len(sys.argv) > 1:
+#    experiment_dir = sys.argv[1]
+#else:
+#    print('usage example: run_visualizations.py /home/hp200321/data/botany-6-768/')
+#    sys.exit(1)
 
 run_dir = os.path.join(experiment_dir, 'runs')
 Runs = glob.glob(os.path.join(run_dir, '*un_*')) #match borth Run_NN and run_NN
