@@ -16,14 +16,23 @@ def index(experiment_dir, visualization_dirs):
     Ideally the paths in the web page are relative to the index file itself
     so that the webpage can be re-located.   
     """
+    
     outfile = open(os.path.join(experiment_dir, 'index.html'), 'wt')
 
+    title = os.path.basename(os.path.normpath(experiment_dir))
     print(
-    """
+    f"""
     <html>
-    <head></head>
-    <body>
+    <head>
+	<title>{title}</title>
+	<link rel="icon" type="image/x-icon" href="favicon.png">
+    </head>
+    <body> 
     """, file=outfile)
+
+    sdir = os.path.dirname(os.path.abspath(__file__))
+    shutil.copyfile(os.path.join(sdir,'favicon.png'),
+                    os.path.join(experiment_dir,'favicon.png'))
     
     for d,params in visualization_dirs:
         d = os.path.relpath(d, start=experiment_dir) # convert to a relative path

@@ -1,7 +1,10 @@
 <html>
-    <head></head>
-    <body>
-      <h1>{{run.name}}</h1>
+  <head>
+    <title>{{run.name}}</title>
+    <link rel="icon" type="image/x-icon" href="../../../favicon.png">
+  </head>
+  <body>
+    <h1>{{run.name}}</h1>
 
       <a href="../../../index.html">index</a>
       
@@ -18,9 +21,7 @@
       </table>
 
 
-      <h2>Profiles</h2>
       <img src="profiles.png">
-      <br>
       <img src="timeplot.png">
       <br>
       
