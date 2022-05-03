@@ -15,6 +15,8 @@
 	<tr><td>qt_lambda</td><td>{{run.params.qt_lambda}}</td> <td>m</td></tr>
 	<tr><td>thl_Gamma</td><td>{{run.params.thl_Gamma}}</td> <td>K/km</td></tr>
 	<tr><td>wpamp</td>    <td>{{'%0.3f'%(run.params.wpamp*100)}}</td>     <td>cm/s</td></tr>
+	<tr><td>dudz</td>     <td>{{'%0.3f'%(run.params.dudz)*1000}}</td>        <td>m/s/km</td></tr>
+	<tr><td>w0</td>       <td>{{'%0.3f'%(run.params.w0*100)}}</td>        <td>cm/s</td></tr>
 	<tr></tr>
 	<tr><td>dx</td>     <td>{{run.dx}}</td>          <td>m</td></tr>
 	<tr><td>xsize</td>  <td>{{run.xsize/1000}}</td>  <td>km</td></tr>

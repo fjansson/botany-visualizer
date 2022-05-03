@@ -27,7 +27,8 @@ def index(experiment_dir, visualization_dirs):
 	<title>{title}</title>
 	<link rel="icon" type="image/x-icon" href="favicon.png">
     </head>
-    <body> 
+    <body>
+    <h1>{title}</h1> 
     """, file=outfile)
 
     sdir = os.path.dirname(os.path.abspath(__file__))
