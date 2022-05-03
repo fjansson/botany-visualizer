@@ -169,14 +169,16 @@ for r in Runs:
     #thumbnail.make_thumbnail(rundir=r, outdir=thumbnail_dir, run=run_name)
     # placeholder thumbnail: albedo
 
-
     # create visualizations directory in run dir
     outdir = os.path.join(r, 'visualizations')
 
-    if not os.path.isdir(outdir):
-        os.makedirs(outdir)
-
-    visualization_dirs.append((outdir, dales))
+    try:
+        if not os.path.isdir(outdir):
+            os.makedirs(outdir)
+    except:
+        print(f"could not create directory {outdir}, continuing")
+        continue
+            
 
     #HEEPS plot settings:
     #colorbar = True
@@ -193,11 +195,19 @@ for r in Runs:
         crossxy   = NC_loader(r,'crossxy', 1)
         crossxy13 = NC_loader(r,'crossxy', 13)
         profiles  = NC_loader(r,'profiles')
-        tmser     = NC_loader(r,'tmser')
     except:
         print("Failed to load netCDFs, continuing with other runs.")
         continue
 
+    # missing or empty for botany-6, try to work around it
+    try:
+        tmser     = NC_loader(r,'tmser')
+    except:
+        tmser = None
+        
+
+    visualization_dirs.append((outdir, dales))
+        
     size = cape.lwp.shape[1] # number of cells in y
     movie_size = min(size, 1080)
     print(f'Still image size {size}')
@@ -212,8 +222,14 @@ for r in Runs:
         return ti
 
     zt = profiles.zt
-    zb = tmser.zb[:]
-    zbm = np.nanmean(zb[zb>0])
+    try:
+        zb = tmser.zb[:]
+        zbm = np.mean(zb[zb>0])
+        if np.isnan(zbm): # default value for botany-6 where tmser data is missing
+            zbm = 1000 
+    except:
+        zbm = 1000
+            
     ib = find_index_nearest(zt, zbm) # z index of cloud base
     print(f'Mean zb: {zbm} m, index: {ib}')
     ub = np.mean(profiles.u[:, ib])
@@ -232,7 +248,8 @@ for r in Runs:
     profileplot.plot_initial(dales, outdir=outdir)
     profileplot.plot_profile(profiles, dales, outdir=outdir,
                              times=[12,24,36,48])
-    profileplot.time_plot(tmser, cape, outdir=outdir)
+    if tmser is not None:
+        profileplot.time_plot(tmser, cape, outdir=outdir)
 
 
     coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
