@@ -213,7 +213,7 @@ for r in Runs:
 
     zt = profiles.zt
     zb = tmser.zb[:]
-    zbm = np.mean(zb[zb>0])
+    zbm = np.nanmean(zb[zb>0])
     ib = find_index_nearest(zt, zbm) # z index of cloud base
     print(f'Mean zb: {zbm} m, index: {ib}')
     ub = np.mean(profiles.u[:, ib])
