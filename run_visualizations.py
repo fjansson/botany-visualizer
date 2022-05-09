@@ -269,8 +269,8 @@ for r in Runs:
     #thumbnail_viz.plot(times=[48], filename='thumbnail.png')
 
     # place another thumbnail in the output directory of this job
-    thumbnail_viz = albedo.Albedo(cape, outdir=outdir, colorbar=False, time_fmt=None, size=160, text=run_name)
-    thumbnail_viz.plot(times=[48], filename='thumbnail.png')
+#    thumbnail_viz = albedo.Albedo(cape, outdir=outdir, colorbar=False, time_fmt=None, size=160, text=run_name)
+#    thumbnail_viz.plot(times=[48], filename='thumbnail.png')
 
     twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
     twp_viz.plot(times=plot_times)

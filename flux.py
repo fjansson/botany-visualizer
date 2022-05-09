@@ -31,7 +31,7 @@ class Flux(Plot):
         ti = 0
 
         flux = np.copy(self.data.thl[ti,:,:]) # placeholder data of right size
-        self.imflux = plt.imshow(flux, cmap=cmap, vmin=-.1, vmax=.1)
+        self.imflux = plt.imshow(flux, cmap=cmap, vmin=-.04, vmax=.04)
 
         
         if not self.colorbar:

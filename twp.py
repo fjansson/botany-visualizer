@@ -16,13 +16,17 @@ from plot import Plot
 class TWP(Plot):
     def __init__(self, data, outdir=None, size=1080, colorbar=False, time_fmt=None):
         super().__init__(data, outdir, size, colorbar, time_fmt)
+        # TWP - deviation from frame mean
+
         
         #color1 ='#0080ff00' # transparent cyan
         #color2 ='#0080ffff' # solid cyan
         #color1b='#ffffff' # solid white
 
-        self.twpmin = 29
-        self.twpmax = 60
+        #self.twpmin = 29 # range for total TWP
+        #self.twpmax = 60
+        self.twpmin = -2 # for TWP deviation from frame mean
+        self.twpmax = 2
         self.moviename = 'twp.mp4'
         self.plotname = 'twp'
         #self.cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap2',[color1,color2],256)
@@ -54,6 +58,7 @@ class TWP(Plot):
 
     def select_time(self, ti, run='', vx=0, vy=0):
         twp = self.data.twp[ti,:,:]
+        twp -= np.mean(twp)
         if vx or vy:
             dx = vx*ti
             dy = vy*ti
