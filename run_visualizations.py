@@ -73,7 +73,7 @@ class NC_loader:
             'crossxy'   : {'filename':f'crossxy', 'fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
             'fielddump' : {'filename':'fielddump','fields':('u', 'v', 'w', 'thl', 'qt', 'ql', 'qr')},
             'profiles'  : {'filename':f'profiles.{exp_nr}', 'fields':('zt', 'u', 'v', 'thl', 'qt', 'ql')},
-            'tmser'     : {'filename':f'tmser.{exp_nr}', 'fields':('cfrac', 'lwp_bar', 'zb', 'zi', 'zc_max')},
+            'tmser'     : {'filename':f'tmser.{exp_nr}', 'fields':('cfrac', 'lwp_bar', 'rwp_bar', 'twp_bar', 'zb', 'zi', 'zc_max')},
         }
 
         rename_mapping = {'qr' : 'sv002',   # experimental remapping of variable names
@@ -128,10 +128,14 @@ parser.add_argument('directory', metavar='directory', type=str,
                     help='Base directory for the runs')
 parser.add_argument("--nomovie", action="store_true", default=False,
                     help="Don't create movies.")
+parser.add_argument("--nostills", action="store_true", default=False,
+                    help="Don't create still images.")
+
 
 args = parser.parse_args()
 
 make_movie = not args.nomovie
+make_stills = not args.nostills
 experiment_dir = args.directory
 
 #if len(sys.argv) > 1:
@@ -245,23 +249,25 @@ for r in Runs:
     #vy=-10
     framerate=20
 
-    profileplot.plot_initial(dales, outdir=outdir)
-    profileplot.plot_profile(profiles, dales, outdir=outdir,
-                             times=[12,24,36,48])
-    if tmser is not None:
-        profileplot.time_plot(tmser, cape, outdir=outdir)
+    if make_stills:
+        profileplot.plot_initial(dales, outdir=outdir)
+        profileplot.plot_profile(profiles, dales, outdir=outdir,
+                                 times=[12,24,36,48])
+        if tmser is not None:
+            profileplot.time_plot(tmser, cape, outdir=outdir)
 
-
-    coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
-    coldpool_viz.plot(times=plot_times)
-    coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
+    if make_stills:
+        coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
+        coldpool_viz.plot(times=plot_times)
     if make_movie:
+        coldpool_viz = coldpool.Coldpool(crossxy, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
         coldpool_viz.movie(vx=vx, vy=vy, fps=framerate)
 
-    albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
-    albedo_viz.plot(times=plot_times)
-    albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
+    if make_stills:
+        albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
+        albedo_viz.plot(times=plot_times)
     if make_movie:
+        albedo_viz = albedo.Albedo(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
         albedo_viz.movie(vx=vx, vy=vy, fps=framerate)
 
     # bug: all runs written to the same name
@@ -269,19 +275,21 @@ for r in Runs:
     #thumbnail_viz.plot(times=[48], filename='thumbnail.png')
 
     # place another thumbnail in the output directory of this job
-#    thumbnail_viz = albedo.Albedo(cape, outdir=outdir, colorbar=False, time_fmt=None, size=160, text=run_name)
-#    thumbnail_viz.plot(times=[48], filename='thumbnail.png')
+    thumbnail_viz = albedo.Albedo(cape, outdir=outdir, colorbar=False, time_fmt=None, size=160, text=run_name)
+    thumbnail_viz.plot(times=[48], filename='thumbnail.png')
 
-    twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
-    twp_viz.plot(times=plot_times)
-    twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
+    if make_stills:
+        twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
+        twp_viz.plot(times=plot_times)
     if make_movie:
+        twp_viz = twp.TWP(cape, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
         twp_viz.movie(vx=vx, vy=vy, fps=framerate)
 
-    flux_viz = flux.Flux(dales, crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
-    flux_viz.plot(times=plot_times)
-    flux_viz = flux.Flux(dales, crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
+    if make_stills:
+        flux_viz = flux.Flux(dales, crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=size)
+        flux_viz.plot(times=plot_times)
     if make_movie:
+        flux_viz = flux.Flux(dales, crossxy13, outdir=outdir, colorbar=colorbar, time_fmt=time_fmt, size=movie_size)
         flux_viz.movie(vx=vx, vy=vy, fps=framerate)
 
 
