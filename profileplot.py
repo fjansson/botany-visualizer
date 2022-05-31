@@ -184,13 +184,10 @@ def time_plot(tmser, cape, outdir='./'):
     axes[0,0].set(ylabel='cfrac')
 
     axes[1,0].plot(time, tmser.lwp_bar[:]*1000, label='LWP')
-    axes[1,0].set_ylim(bottom=0, top=1)
     axes[1,0].set(ylabel=r'LWP (g/m$^2$)')
     axes[2,0].plot(time, tmser.rwp_bar[:]*1000, label='LWP')
-    axes[2,0].set_ylim(bottom=0, top=1)
     axes[2,0].set(ylabel=r'RWP (g/m$^2$)')
     axes[3,0].plot(time, tmser.twp_bar[:], label='LWP')
-    axes[3,0].set_ylim(bottom=0, top=1)
     axes[3,0].set(ylabel=r'TWP (kg/m$^2$)')
 
     axes[3,0].set(xlabel='time (h)')
